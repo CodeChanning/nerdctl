@@ -107,11 +107,14 @@ func NewHostOptions(ctx context.Context, refHostname string, optFuncs ...Opt) (*
 				return found, err
 			}
 		}
+
+		fmt.Println("host dir is empty")
 		return "", nil
 	}
 
 	if o.authCreds != nil {
 		ho.Credentials = o.authCreds
+
 	} else {
 		authCreds, err := NewAuthCreds(refHostname)
 		if err != nil {
@@ -125,16 +128,25 @@ func NewHostOptions(ctx context.Context, refHostname string, optFuncs ...Opt) (*
 		ho.DefaultTLS = &tls.Config{
 			InsecureSkipVerify: true,
 		}
+
+		fmt.Println("skip verify is true")
+	} else {
+		fmt.Println("skip verify is false")
 	}
 
 	if o.plainHTTP {
 		ho.DefaultScheme = "http"
+		fmt.Println("ho def scheme is http")
 	} else {
 		if isLocalHost, err := docker.MatchLocalhost(refHostname); err != nil {
+			fmt.Println("ho def scheme is not http")
 			return nil, err
 		} else if isLocalHost {
 			ho.DefaultScheme = "http"
+			fmt.Println("ho def scheme is http")
 		}
+
+		fmt.Println("ho def scheme is not set")
 	}
 	return &ho, nil
 }
@@ -222,6 +234,12 @@ func NewAuthCreds(refHostname string) (AuthCreds, error) {
 					logrus.Warnf("ac.RegistryToken (for %q) is not supported yet (FIXME)", authConfigHostname)
 				}
 
+				fmt.Println("\n Username: ")
+				fmt.Println(ac.Username)
+
+				fmt.Println("\n Password: ")
+				fmt.Println(ac.Password)
+
 				credFunc = func(credFuncArg string) (string, string, error) {
 					// credFuncArg should be like "registry-1.docker.io"
 					if credFuncArg != credFuncExpectedHostname {
@@ -231,6 +249,7 @@ func NewAuthCreds(refHostname string) (AuthCreds, error) {
 					if ac.IdentityToken != "" {
 						return "", ac.IdentityToken, nil
 					}
+
 					return ac.Username, ac.Password, nil
 				}
 				break

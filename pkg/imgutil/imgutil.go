@@ -30,8 +30,6 @@ import (
 	refdocker "github.com/containerd/containerd/reference/docker"
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/snapshots"
-	"github.com/containerd/imgcrypt"
-	"github.com/containerd/imgcrypt/images/encryption"
 	"github.com/containerd/nerdctl/pkg/errutil"
 	"github.com/containerd/nerdctl/pkg/idutil/imagewalker"
 	"github.com/containerd/nerdctl/pkg/imgutil/dockerconfigresolver"
@@ -223,14 +221,14 @@ func PullImage(ctx context.Context, client *containerd.Client, stdout, stderr io
 	snOpt := getSnapshotterOpts(snapshotter)
 	if unpackB {
 		logrus.Debugf("The image will be unpacked for platform %q, snapshotter %q.", ocispecPlatforms[0], snapshotter)
-		imgcryptPayload := imgcrypt.Payload{}
-		imgcryptUnpackOpt := encryption.WithUnpackConfigApplyOpts(encryption.WithDecryptedUnpack(&imgcryptPayload))
+		/*//imgcryptPayload := imgcrypt.Payload{}
+		//imgcryptUnpackOpt := encryption.WithUnpackConfigApplyOpts(encryption.WithDecryptedUnpack(&imgcryptPayload))
 		config.RemoteOpts = append(config.RemoteOpts,
 			containerd.WithPullUnpack,
 			containerd.WithUnpackOpts([]containerd.UnpackOpt{imgcryptUnpackOpt}))
 
 		// different remote snapshotters will update pull.Config separately
-		snOpt.apply(config, ref)
+		snOpt.apply(config, ref)*/
 	} else {
 		logrus.Debugf("The image will not be unpacked. Platforms=%v.", ocispecPlatforms)
 	}

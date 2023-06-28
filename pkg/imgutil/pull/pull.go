@@ -19,11 +19,14 @@ package pull
 
 import (
 	"context"
+	"fmt"
 	"io"
 
+	"github.com/awslabs/soci-snapshotter/fs/source"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/log"
+	ctdsnapshotters "github.com/containerd/containerd/pkg/snapshotters"
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/nerdctl/pkg/imgutil/jobs"
 	"github.com/containerd/nerdctl/pkg/platformutil"
@@ -61,23 +64,57 @@ func Pull(ctx context.Context, client *containerd.Client, ref string, config *Co
 		close(progress)
 	}()
 
-	h := images.HandlerFunc(func(ctx context.Context, desc ocispec.Descriptor) ([]ocispec.Descriptor, error) {
+	/* soci uses a diff h so i had to comment the nerdctl default oen out || h := images.HandlerFunc(func(ctx context.Context, desc ocispec.Descriptor) ([]ocispec.Descriptor, error) {
 		if desc.MediaType != images.MediaTypeDockerSchema1Manifest {
 			ongoing.Add(desc)
 		}
 		return nil, nil
-	})
+	}) */
+
+	/*adding options for a docker.Newresolver() call to get SOCI resolver
+	var PushTracker = docker.NewInMemoryTracker()
+
+	options := docker.ResolverOptions{
+		Tracker: PushTracker,
+	}
+
+	hostOptions := dockerconfig.HostOptions{}
+	hostOptions.Credentials = func(host string) (string, string, error) {
+		// If host doesn't match...
+		// Only one host
+	}
+	hostOptions.DefaultTLS = &tls.Config{}
+
+	options.Hosts = dockerconfig.ConfigureHosts(ctx, hostOptions)
+
+	docker.NewResolver(options)*/
 
 	log.G(pctx).WithField("image", ref).Debug("fetching")
 	platformMC := platformutil.NewMatchComparerFromOCISpecPlatformSlice(config.Platforms)
 	opts := []containerd.RemoteOpt{
-		containerd.WithResolver(config.Resolver),
+		/*containerd.WithResolver(config.Resolver),
 		containerd.WithImageHandler(h),
 		//nolint:staticcheck
 		containerd.WithSchema1Conversion, //lint:ignore SA1019 nerdctl should support schema1 as well.
-		containerd.WithPlatformMatcher(platformMC),
+		containerd.WithPlatformMatcher(platformMC),*/
+
+		containerd.WithPullLabels(make(map[string]string, 0)), //soci
+		containerd.WithResolver(config.Resolver),
+		/*containerd.WithImageHandler(images.HandlerFunc(func(ctx context.Context, desc ocispec.Descriptor) ([]ocispec.Descriptor, error) {
+			if desc.MediaType != images.MediaTypeDockerSchema1Manifest {
+				fmt.Printf("fetching %v... %v\n", desc.Digest.String()[:15], desc.MediaType)
+			}
+			return nil, nil
+		})),*/
+		//nolint:staticcheck
+		containerd.WithSchema1Conversion,       //lint:ignore SA1019 nerdctl should support schema1 as well.
+		containerd.WithPullUnpack,              //soci
+		containerd.WithPlatform(""),            //soci
+		containerd.WithPullSnapshotter("soci"), //soci
+		containerd.WithImageHandlerWrapper(source.AppendDefaultLabelsHandlerWrapper("", ctdsnapshotters.AppendInfoHandlerWrapper(ref))), //soci
+		//containerd.WithPlatformMatcher(platformMC),
 	}
-	opts = append(opts, config.RemoteOpts...)
+	//opts = append(opts, config.RemoteOpts...)
 
 	var (
 		img containerd.Image
@@ -85,15 +122,21 @@ func Pull(ctx context.Context, client *containerd.Client, ref string, config *Co
 	)
 	if len(config.Platforms) == 1 {
 		// client.Pull is for single-platform (w/ unpacking)
+		fmt.Println("CALLING CONTAINERD PULL")
+		fmt.Println("reference: " + ref)
 		img, err = client.Pull(pctx, ref, opts...)
+		fmt.Println("FINISHED CONTAINERD PULL")
 	} else {
 		// client.Fetch is for multi-platform (w/o unpacking)
 		var imagesImg images.Image
 		imagesImg, err = client.Fetch(pctx, ref, opts...)
 		img = containerd.NewImageWithPlatform(client, imagesImg, platformMC)
 	}
+	fmt.Println("StOPPED PROGRESS???")
 	stopProgress()
+	fmt.Println("StOPPED PROGRESS?")
 	if err != nil {
+		fmt.Println("Returning error")
 		return nil, err
 	}
 

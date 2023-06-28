@@ -19,6 +19,7 @@ package imgutil
 import (
 	"strings"
 
+	sociSource "github.com/awslabs/soci-snapshotter/fs/source"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/images"
 	ctdsnapshotters "github.com/containerd/containerd/pkg/snapshotters"
@@ -31,6 +32,7 @@ const (
 	snapshotterNameOverlaybd = "overlaybd"
 	snapshotterNameStargz    = "stargz"
 	snapshotterNameNydus     = "nydus"
+	snapshotterNameSoci      = "soci"
 
 	// prefetch size for stargz
 	prefetchSize = 10 * 1024 * 1024
@@ -41,6 +43,7 @@ var builtinRemoteSnapshotterOpts = map[string]snapshotterOpts{
 	snapshotterNameOverlaybd: &remoteSnapshotterOpts{snapshotter: "overlaybd"},
 	snapshotterNameStargz:    &remoteSnapshotterOpts{snapshotter: "stargz", extraLabels: stargzExtraLabels},
 	snapshotterNameNydus:     &remoteSnapshotterOpts{snapshotter: "nydus"},
+	snapshotterNameSoci:      &remoteSnapshotterOpts{snapshotter: "soci"},
 }
 
 // snapshotterOpts is used to update pull config
@@ -52,6 +55,7 @@ type snapshotterOpts interface {
 
 // getSnapshotterOpts get snapshotter opts by fuzzy matching of the snapshotter name
 func getSnapshotterOpts(snapshotter string) snapshotterOpts {
+	logrus.Print(snapshotter)
 	for sn, sno := range builtinRemoteSnapshotterOpts {
 		if strings.Contains(snapshotter, sn) {
 			if snapshotter != sn {
@@ -77,7 +81,11 @@ func (rs *remoteSnapshotterOpts) isRemote() bool {
 
 func (rs *remoteSnapshotterOpts) apply(config *pull.Config, ref string) {
 	h := ctdsnapshotters.AppendInfoHandlerWrapper(ref)
-	if rs.extraLabels != nil {
+	if rs.snapshotter == "soci" {
+		logrus.Print("SOCI BEING USED !!!")
+		h = sociSource.AppendDefaultLabelsHandlerWrapper(
+			"", ctdsnapshotters.AppendInfoHandlerWrapper(ref))
+	} else if rs.extraLabels != nil {
 		h = rs.extraLabels(h)
 	}
 	config.RemoteOpts = append(
@@ -94,9 +102,9 @@ type defaultSnapshotterOpts struct {
 }
 
 func (dsn *defaultSnapshotterOpts) apply(config *pull.Config, _ref string) {
-	config.RemoteOpts = append(
-		config.RemoteOpts,
-		containerd.WithPullSnapshotter(dsn.snapshotter))
+	/*config.RemoteOpts = append(
+	config.RemoteOpts,
+	containerd.WithPullSnapshotter(dsn.snapshotter))*/
 }
 
 // defaultSnapshotterOpts is not a remote snapshotter
