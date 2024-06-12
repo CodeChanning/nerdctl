@@ -102,8 +102,10 @@ func Attach(ctx context.Context, client *containerd.Client, req string, options 
 			log.G(ctx).WithError(err).Error("console resize")
 		}
 	}
-	sigC := signalutil.ForwardAllSignals(ctx, task)
-	defer signalutil.StopCatch(sigC)
+	if options.SigProxy {
+		sigC := signalutil.ForwardAllSignals(ctx, task)
+		defer signalutil.StopCatch(sigC)
+	}
 
 	// Wait for the container to exit.
 	statusC, err := task.Wait(ctx)

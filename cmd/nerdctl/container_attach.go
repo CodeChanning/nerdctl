@@ -52,6 +52,7 @@ Caveats:
 		SilenceErrors:     true,
 	}
 	attachCommand.Flags().String("detach-keys", consoleutil.DefaultDetachKeys, "Override the default detach keys")
+	attachCommand.Flags().Bool("sig-proxy", true, "Allow signal proxying");
 	return attachCommand
 }
 
@@ -64,12 +65,17 @@ func processContainerAttachOptions(cmd *cobra.Command) (types.ContainerAttachOpt
 	if err != nil {
 		return types.ContainerAttachOptions{}, err
 	}
+	sigProxy, err := cmd.Flags().GetBool("sig-proxy")
+	if err != nil {
+		return types.ContainerAttachOptions{}, err
+	}
 	return types.ContainerAttachOptions{
 		GOptions:   globalOptions,
 		Stdin:      cmd.InOrStdin(),
 		Stdout:     cmd.OutOrStdout(),
 		Stderr:     cmd.ErrOrStderr(),
 		DetachKeys: detachKeys,
+		SigProxy:   sigProxy,
 	}, nil
 }
 
