@@ -534,7 +534,11 @@ func TestRunRmTime(t *testing.T) {
 	}
 }
 
+<<<<<<< HEAD
 func runAttachStdin(t *testing.T, testStr string, args []string) string {
+=======
+func TestRunAttachStdin(t *testing.T) {
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 	if runtime.GOOS == "windows" {
 		t.Skip("run attach test is not yet implemented on Windows")
 	}
@@ -543,10 +547,15 @@ func runAttachStdin(t *testing.T, testStr string, args []string) string {
 	base := testutil.NewBase(t)
 	containerName := testutil.Identifier(t)
 
+<<<<<<< HEAD
+=======
+	const testStr = "test-run-stdio"
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 	opts := []func(*testutil.Cmd){
 		testutil.WithStdin(strings.NewReader("echo " + testStr + "\nexit\n")),
 	}
 
+<<<<<<< HEAD
 	fullArgs := []string{"run", "--rm", "-i"}
 	fullArgs = append(fullArgs, args...)
 	fullArgs = append(fullArgs,
@@ -562,6 +571,13 @@ func runAttachStdin(t *testing.T, testStr string, args []string) string {
 }
 
 func runAttach(t *testing.T, testStr string, args []string) string {
+=======
+	defer base.Cmd("rm", "-f", containerName).AssertOK()
+	base.Cmd("run", "--rm", "-a", "stdin", "-a", "stdout", "--name", containerName, testutil.CommonImage).CmdOption(opts...).AssertOutExactly(testStr + "\n")
+}
+
+func TestRunAttachStdout(t *testing.T) {
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 	if runtime.GOOS == "windows" {
 		t.Skip("run attach test is not yet implemented on Windows")
 	}
@@ -570,6 +586,7 @@ func runAttach(t *testing.T, testStr string, args []string) string {
 	base := testutil.NewBase(t)
 	containerName := testutil.Identifier(t)
 
+<<<<<<< HEAD
 	fullArgs := []string{"run"}
 	fullArgs = append(fullArgs, args...)
 	fullArgs = append(fullArgs,
@@ -652,4 +669,8 @@ func TestRunAttachFlag(t *testing.T) {
 			}
 		})
 	}
+=======
+	defer base.Cmd("rm", "-f", containerName).AssertOK()
+	base.Cmd("run", "-a", "stdout", "--name", containerName, testutil.CommonImage, "sh", "-euxc", "echo foo").AssertOutContains("foo")
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 }

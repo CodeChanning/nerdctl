@@ -39,9 +39,12 @@ import (
 	"golang.org/x/term"
 )
 
-// NewTask is from https://github.com/containerd/containerd/blob/v1.4.3/cmd/ctr/commands/tasks/tasks_unix.go#L70-L108
 func NewTask(ctx context.Context, client *containerd.Client, container containerd.Container,
+<<<<<<< HEAD
 	attachStreamOpt []string, flagI, flagT, flagD bool, con console.Console, logURI, detachKeys, namespace string, detachC chan<- struct{}) (containerd.Task, error) {
+=======
+	flagA []string, flagI, flagT, flagD bool, con console.Console, logURI, detachKeys, namespace string, detachC chan<- struct{}) (containerd.Task, error) {
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 
 	var t containerd.Task
 	closer := func() {
@@ -62,7 +65,11 @@ func NewTask(ctx context.Context, client *containerd.Client, container container
 		io.Cancel()
 	}
 	var ioCreator cio.Creator
+<<<<<<< HEAD
 	if len(attachStreamOpt) != 0 {
+=======
+	if len(flagA) != 0 {
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 		log.G(ctx).Debug("attaching output instead of using the log-uri")
 		if flagT {
 			in, err := consoleutil.NewDetachableStdin(con, detachKeys, closer)
@@ -71,7 +78,11 @@ func NewTask(ctx context.Context, client *containerd.Client, container container
 			}
 			ioCreator = cio.NewCreator(cio.WithStreams(in, con, nil), cio.WithTerminal)
 		} else {
+<<<<<<< HEAD
 			streams := processAttachStreamsOpt(attachStreamOpt)
+=======
+			streams := flagAStreams(flagA)
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 			ioCreator = cio.NewCreator(cio.WithStreams(streams.stdIn, streams.stdOut, streams.stdErr))
 		}
 
@@ -150,7 +161,11 @@ func NewTask(ctx context.Context, client *containerd.Client, container container
 	return t, nil
 }
 
+<<<<<<< HEAD
 // struct used to store streams specified with attachStreamOpt (-a, --attach)
+=======
+// struct used to store streams specified with flagA (-a, --attach)
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 type streams struct {
 	stdIn  *os.File
 	stdOut *os.File
@@ -158,7 +173,11 @@ type streams struct {
 }
 
 func nullStream() *os.File {
+<<<<<<< HEAD
 	devNull, err := os.Open(os.DevNull)
+=======
+	devNull, err := os.Open("/dev/null")
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 	if err != nil {
 		return nil
 	}
@@ -167,7 +186,11 @@ func nullStream() *os.File {
 	return devNull
 }
 
+<<<<<<< HEAD
 func processAttachStreamsOpt(streamsArr []string) streams {
+=======
+func flagAStreams(streamsArr []string) streams {
+>>>>>>> 74700afc (feat: support for -a and --attach in run)
 	stdIn := os.Stdin
 	stdOut := os.Stdout
 	stdErr := os.Stderr
