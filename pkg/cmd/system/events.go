@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"text/template"
 	"time"
 
@@ -39,7 +40,16 @@ type EventOut struct {
 	Timestamp time.Time
 	Namespace string
 	Topic     string
+	Status    string
 	Event     string
+}
+
+func TopicToStatus(topic string) string {
+	if strings.Contains(topic, "start") {
+		return "start"
+	}
+
+	return "unknown status"
 }
 
 // Events is from https://github.com/containerd/containerd/blob/v1.4.3/cmd/ctr/commands/events/events.go
@@ -81,7 +91,7 @@ func Events(ctx context.Context, client *containerd.Client, options types.System
 				}
 			}
 			if tmpl != nil {
-				out := EventOut{e.Timestamp, e.Namespace, e.Topic, string(out)}
+				out := EventOut{e.Timestamp, e.Namespace, e.Topic, TopicToStatus(e.Topic), string(out)}
 				var b bytes.Buffer
 				if err := tmpl.Execute(&b, out); err != nil {
 					return err
