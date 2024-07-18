@@ -310,7 +310,6 @@ func processCreateCommandFlagsInRun(cmd *cobra.Command) (opt types.ContainerCrea
 	if err != nil {
 		return
 	}
-<<<<<<< HEAD
 
 	validAttachFlag := true
 	for i, str := range opt.Attach {
@@ -324,8 +323,6 @@ func processCreateCommandFlagsInRun(cmd *cobra.Command) (opt types.ContainerCrea
 		return opt, fmt.Errorf("invalid stream specified with -a flag. Valid streams are STDIN, STDOUT, and STDERR")
 	}
 
-=======
->>>>>>> 74700afc (feat: support for -a and --attach in run)
 	return opt, nil
 }
 
